@@ -17,9 +17,9 @@ var c = 0; var tmsI = 0; var colI = 0; var colI_lock = 0; var prevcolI = 0; var 
 
 var colorBuy = '#8fbb77'; var colorSell = '#a04b4b';
 
-var id; var timestamp; var price; var vol; var type; 
+var id; var timestamp; var price; var vol; var type; var g_timestampMax = 0;  var g_tmsI = 0;
 
-var gi = 0; var g_colI=0;
+var gi = 0; var g_colI=-1;
 
 
 
@@ -125,7 +125,7 @@ function roundVol(v){
 
 function priceScale(i){
 
-	x = 40 //% min and max size of price scale 
+	x = 20 //% min and max size of price scale 
 
 	min  =   roundPrice(  i - (i / 100 * x ) , ap) 
 
@@ -203,9 +203,11 @@ function priceScale(i){
 
 function readFile(file){
 
-
+	csv = [];
 
 	file = "../bfcsv/"+file;
+
+	console.log(file)
     
     var rawFile = new XMLHttpRequest();
     rawFile.open("GET", file, false);
@@ -307,7 +309,7 @@ function addCol(dy){
 
 
 
-
+ 
 
     return hh
 }
@@ -319,8 +321,22 @@ function addCol(dy){
 
 function gap(){
 
+	if(timestamp >= g_timestampMax){ g_tmsI = 0}
 
-	if(timestamp > timestampMax){ g_colI++ }
+
+	if(g_tmsI==0){ 
+
+	
+		g_timestampMax = timestamp + prd;
+
+		g_tmsI++; 
+
+		g_colI++;
+		
+		
+	}
+   
+	
 
 	if(type=="buy"){
 
@@ -592,6 +608,8 @@ function _colI(){
 
 	if(colI_lock==0){  colI_lock = 1; }else{ colI++ ;}
 
+	
+
 	prevcolI = 1}
 
 function displayCsv(){
@@ -618,10 +636,13 @@ function displayCsv(){
 
     			tmsI++; 
 
+
+
+    		
     		}
 
 
-
+  
     		id = csv[c][1];
     		price = csv[c][2];
     		vol = Number(csv[c][3]);
@@ -629,7 +650,9 @@ function displayCsv(){
 	
 			pr = roundPrice(price, ap)
 
-			gap()
+		    gap()
+			
+        	
 
     		if(typeof(col[pr]) !== "undefined"){
 
@@ -705,12 +728,12 @@ function displayCsv(){
 
 
 
-        
     		//add col 
-    		if(timestamp > timestampMax || c == (csv.length-1)){
+    		if(timestamp >= timestampMax || c == (csv.length-1)){
 
-    			_colI()	
+    			
 				
+    			
     			if(c !== (csv.length-1)){ tmsI=0 };
 
 
@@ -802,7 +825,8 @@ function displayCsv(){
 			    	}
 			    }
 
-				
+		
+				colI++
 
 
     		}
@@ -950,11 +974,15 @@ function displayCsv(){
 
 		bfxTrade()
 
+		//testWSS()
+
 		gapHTML()
 		
 
 
 	}else{
+
+		//testWSS()
 
 		bfxTrade()
 	}
@@ -968,14 +996,13 @@ function eachLive(){
 
 
 
-	pr = roundPrice(price, ap)
 
-	gap()
 
 
 	//set period
 	//add col 
 	if(timestamp>=timestampMax){ tmsI = 0 }
+
 	if(tmsI==0){ 
 		
 		timestampMax = timestamp + prd;
@@ -1004,12 +1031,16 @@ function eachLive(){
 
 		$('#total').append(addCol(dy));
 
+	    	
+
 
 	}
 
 
 	
+	pr = roundPrice(price, ap)
 
+	gap()
 
 
 
@@ -1273,7 +1304,57 @@ function displayWss(){
 
 
 
+function testWSS(){
 
+    	csvFile = '28-08-2021---29-08-2021---BTCUSD.csv';
+	readFile(csvFile)
+
+		c= 0
+
+		var eachInterval = setInterval(function(){
+
+			
+
+			for(e=0; e<eachMax; e++){
+
+				if( c <= (csv.length-1) ) { 
+
+		            timestamp = Number(csv[c][0]);
+		    		id = csv[c][1];
+		    		price = csv[c][2];
+		    		vol = Number(csv[c][3]);
+		    		type = csv[c][4];
+
+					eachLive()
+
+
+				}else{
+
+					clearInterval(eachInterval);
+
+
+					
+					
+					
+					break;
+
+
+
+					
+				}
+
+				c++;
+			}
+
+
+
+		
+
+
+	}, 10)
+
+
+}
 
 
 
