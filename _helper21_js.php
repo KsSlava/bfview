@@ -207,7 +207,6 @@ function readFile(file){
 
 	file = "../bfcsv/"+file;
 
-	console.log(file)
     
     var rawFile = new XMLHttpRequest();
     rawFile.open("GET", file, false);
@@ -294,7 +293,7 @@ function addTotalCol(){
 
 function addCol(dy){
 
-	_colI()	
+	colI++;	
 	
     hh = '<div>'
        + '<div class="titleCol">'+dy+'</div>';
@@ -307,7 +306,9 @@ function addCol(dy){
 
     hh += '</div>'
 
+    
 
+  
 
  
 
@@ -344,18 +345,18 @@ function gap(){
 
 			gaps[pr+type] = {}
 
-			gaps[pr+type][g_colI] = g_colI
+			gaps[pr+type][colI] = colI
 
 			
 
 			gaps[pr+"sell"] = {}
 
-			gaps[pr+"sell"][g_colI] = '--'
+			gaps[pr+"sell"][colI] = '--'
 
 		}else{
 
             
-			//g_colIose gap s
+			//colIose gap s
 			len  = Object.keys(gaps[pr+type]).length
 
 			if(len>0){
@@ -364,12 +365,12 @@ function gap(){
 
 				if(gaps[pr+type][last]=="--"){
 
-					gaps[pr+type][last]=g_colI
+					gaps[pr+type][last]=colI
 
 				}else{
 
 					
-					if(gaps[pr+type][last]<g_colI) {gaps[pr+type][g_colI] = g_colI}
+					if(gaps[pr+type][last]<colI) {gaps[pr+type][colI] = colI}
 					
 				}
 
@@ -383,9 +384,9 @@ function gap(){
 				if(len2>0){
 
 					
-					if(gaps[pr+"sell"][last2]!="--" && gaps[pr+"sell"][last2]<g_colI){
+					if(gaps[pr+"sell"][last2]!="--" && gaps[pr+"sell"][last2]<colI){
 
-						gaps[pr+"sell"][g_colI] = '--'
+						gaps[pr+"sell"][colI] = '--'
 
 					}
 
@@ -412,16 +413,16 @@ function gap(){
 
 			gaps[pr+type] = {}
 
-			gaps[pr+type][g_colI] = g_colI
+			gaps[pr+type][colI] = colI
 
 			gaps[pr+"buy"] = {}
 
-			gaps[pr+"buy"][g_colI] = '--'
+			gaps[pr+"buy"][colI] = '--'
 
 		}else{
 
 
-			//g_colIose gap sell
+			//colIose gap sell
 			len  = Object.keys(gaps[pr+type]).length
 
 			
@@ -431,12 +432,12 @@ function gap(){
 
 				if(gaps[pr+type][last]=="--"){
 
-					gaps[pr+type][last]=g_colI
+					gaps[pr+type][last]=colI
 
 				}else{
 
 					
-					if(gaps[pr+type][last]<g_colI) {gaps[pr+type][g_colI] = g_colI}
+					if(gaps[pr+type][last]<colI) {gaps[pr+type][colI] = colI}
 					
 				}
 
@@ -449,9 +450,9 @@ function gap(){
 
 					
 					
-					if(gaps[pr+"buy"][last2]!="--" && gaps[pr+"buy"][last2]<g_colI){
+					if(gaps[pr+"buy"][last2]!="--" && gaps[pr+"buy"][last2]<colI){
 
-						gaps[pr+"buy"][g_colI] = '--'
+						gaps[pr+"buy"][colI] = '--'
 
 					}
 
@@ -826,6 +827,7 @@ function displayCsv(){
 			    }
 
 		
+			   
 				colI++
 
 
@@ -970,6 +972,14 @@ function displayCsv(){
     		}
 
     	}  
+
+
+    	//down colI
+    	if(c==csv.length){
+
+    		colI--
+
+    	}
 
 
 		bfxTrade()
@@ -1351,7 +1361,7 @@ function testWSS(){
 		
 
 
-	}, 10)
+	}, 500)
 
 
 }
