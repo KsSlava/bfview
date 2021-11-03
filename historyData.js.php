@@ -203,6 +203,8 @@ function playHist(){
 		                scrH  = $('#t3_left')[0].scrollHeight; 
 			            $('#t3_left').scrollTop(scrH);
 
+			           
+
 	                	break;
 
 	                }else{

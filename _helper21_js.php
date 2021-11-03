@@ -125,7 +125,7 @@ function roundVol(v){
 
 function priceScale(i){
 
-	x = 20 //% min and max size of price scale 
+	x = 30 //% min and max size of price scale 
 
 	min  =   roundPrice(  i - (i / 100 * x ) , ap) 
 
