@@ -182,8 +182,7 @@
 	<?php include('cluster.js.php'); ?>
 
 	<script src="t3.js"></script>
-	<script src="t4.js"></script>
-
+	<?php include('t4.js.php'); ?>
 </body>
 	
 
