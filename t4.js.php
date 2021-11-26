@@ -18,7 +18,7 @@ var utb ={}; var uts ={}; var utbr = 0; var utsr = 0; var utbf = 0; var utsf = 0
 
 var prcStart = 0;
 
-
+var trID = "";
 
 
 var timeStart = 0; var timeEnd = 0; var tse = 0;
@@ -62,18 +62,17 @@ function utc(utmsp, format){
 
 		return d;
 
+	}
+
+
+
+	if(format=="dmy"){
+
+		return d+"-"+mth+"-"+yr;
+
 	}		
 
 }
-
-
-var ste = 0; 
-
-console.log(period)
-
-
-
-
 
 
 
@@ -179,7 +178,44 @@ function results(){
 	}
 
 
- console.log(timeStart +" "+timeEnd+", "+utc(timeStart, "hm") + " "+ utc(timeEnd, "hm")+ " "+Math.round(rb)+ " "+Math.round(rs)+ ", "+Math.round(fakeb)+ " "+Math.round(fakes)+",  "+utbr+" "+utsr+",  "+utbf+" "+utsf)
+	//HTML visualisation output
+
+
+
+		h = '<tr id="'+trID+'">';
+
+			h += 	'<td>'+utc(timeStart, "dmy")+'</td>';
+
+			h += 	'<td>'+utc(timeStart, "hm")+'</td>';
+
+			h += 	'<td>'+utc(timeEnd, "hm")+'</td>';
+
+			h += 	'<td>'+Math.round(rb)+'</td>';
+
+			h += 	'<td>'+Math.round(rs)+'</td>';
+
+			h += 	'<td>'+Math.round(fakeb)+'</td>';
+
+			h += 	'<td>'+Math.round(fakes)+'</td>';
+
+			h += 	'<td>'+utbr+'</td>';
+
+			h += 	'<td>'+utsr+'</td>';
+
+			h += 	'<td>'+utbf+'</td>';
+
+			h += 	'<td>'+utsf+'</td>';
+
+		h += '</tr>';
+
+
+		$("#v4Container table").append(h)
+
+
+	// console.log(timeStart +" "+timeEnd+", "+utc(timeStart, "hm") + " "+ utc(timeEnd, "hm")+ " "+Math.round(rb)+ " "+Math.round(rs)+ ", "+Math.round(fakeb)+ " "+Math.round(fakes)+",  "+utbr+" "+utsr+",  "+utbf+" "+utsf)
+
+
+
 
 }
 
@@ -197,7 +233,12 @@ function terminalV4(){
 		timestamp = parseInt(timestamp.substr(0, 10));
 
 
-		if(tse==0) { timeStart = timestamp; timeEnd = setTimeEnd(timestamp); prcStart = prc; tse=1;}
+		if(tse==0) { 
+			timeStart = timestamp;
+			timeEnd = setTimeEnd(timestamp);
+			prcStart = prc;
+			trID = timeStart.toString() + "_" + timeEnd.toString();
+			tse=1;}
 
 	
 
@@ -209,25 +250,6 @@ function terminalV4(){
 
 				results()
 			}
-
-
-
-
-			// h = '<tr>';
-
-			// 	h += 	'<td>'+utc(timeStart)+" - "+utc(timeEnd)+'</td>';
-
-			// 	h += 	'<td>'+prcStart+" "+prc+'</td>';
-
-			// 	h += 	'<td>'+Math.round(rb)+ " "+Math.round(rs)+'</td>';
-
-			// 	h += 	'<td>'+Math.round(fakeb)+ " "+Math.round(fakes)+'</td>';
-
-			// 	h += 	'<td>'+utbr+ " "+utsr+'</td>';
-
-			// 	h += 	'<td>'+utbf+ " "+utsf+'</td>';
-
-			// h += 	'</tr>';
 
 
 			rb= 0; rs= 0; fakeb= 0; fakes = 0; utbr=0; utsr=0; utbf=0; utsf=0;
@@ -257,7 +279,9 @@ function terminalV4(){
 
 			if(translationState==0){
 
-				results()
+				$('#'+trID).remove();
+
+				results();
 
 				rb= 0; rs= 0; fakeb= 0; fakes = 0; utbr=0; utsr=0; utbf=0; utsf=0;
 			}

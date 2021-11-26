@@ -67,21 +67,15 @@
 	<script type="text/javascript">
 
 
-	var dt;
+	
 
-	//START 
+	
 
 	$(document).ready(function(){
 
 
 		displayCsv()
-
-
-		
-
-		//bfxTrade()
-		//statistic()
-
+	
     })
 		
 		

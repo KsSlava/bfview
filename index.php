@@ -38,7 +38,7 @@
 			.cdDate{font-size: 10px;}
 
 
-			#wssStatus{width: 200px; height: 10px; background-color: #f90101; position: fixed; color:#000; font-size: 10px;} 
+			#wssStatus{width: 10px; height: 10px; background-color: #f90101; position: fixed; color:#000; font-size: 10px;} 
 
 			#clusterContainer { position:absolute; width:25000px; background-color: #1b262d; font-family: arial; font-size: 8px; color: #868686; } 
 			.clusterCol > div{/*border-bottom: 1px solid #000;*/ display: flex; height: 10px;}
@@ -82,9 +82,8 @@
 }
 
 /*v4*/
-#v4Container {display: table;  font-family: arial;  color: #a99064;  font-size: 9px;}
-#v4Container div {display: table-row;}
-#v4Container span {display: table-cell; text-align: right; padding-bottom: 5px;}
+#v4Container table {color: #909591c7; font-family: arial;}
+
 
 .ordTot {padding-left: 5px;}
 .ordTotА {padding-left: 5px;}
@@ -170,7 +169,11 @@
 
 	</div>
 
-	<div id="v4Container"></div>
+	<div id="v4Container">
+		<table>
+			
+		</table>
+	</div>
 
 
 	

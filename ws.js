@@ -91,7 +91,7 @@ function bfxTrade(){
 
           tOrder = "sell";
 
-         console.log(price);
+        
 
         }else{
 
@@ -101,7 +101,7 @@ function bfxTrade(){
 
           $('title').html(symbol+' '+price+' B');
 
-          console.log(price);
+         
 
         }
 

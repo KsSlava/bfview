@@ -17,9 +17,11 @@ var c = 0; var tmsI = 0; var colI = 0; var colI_lock = 0; var prevcolI = 0; var 
 
 var colorBuy = '#8fbb77'; var colorSell = '#a04b4b';
 
-var id; var timestamp; var price; var vol; var type; var g_timestampMax = 0;  var g_tmsI = 0;
+var id; var timestamp; var timestampMax =0; var price; var vol; var type; var g_timestampMax = 0;  var g_tmsI = 0;
 
 var gi = 0; var g_colI=-1;
+
+var dt = new Date;
 
 
 
@@ -125,7 +127,7 @@ function roundVol(v){
 
 function priceScale(i){
 
-	x = 30 //% min and max size of price scale 
+	x = 20 //% min and max size of price scale 
 
 	min  =   roundPrice(  i - (i / 100 * x ) , ap) 
 
@@ -195,10 +197,6 @@ function priceScale(i){
 		
 
 	}
-
-
-
-
 }
 
 function readFile(file){
@@ -237,8 +235,6 @@ function readFile(file){
    rawFile.send(null);
 }
 
-
-//create blocks
 
 function addTotalCol(){
 
@@ -286,7 +282,6 @@ function addTotalCol(){
 	+ '</div>'
 
 	return h
-
 }
 
 
@@ -314,11 +309,6 @@ function addCol(dy){
 
     return hh
 }
-
-
-
-//
-
 
 function gap(){
 
@@ -470,6 +460,102 @@ function gap(){
 
 
 	}
+}
+
+function utc(utmsp, format){
+
+
+
+	dt.setTime(utmsp*1000);
+
+	h         = dt.getUTCHours(); 
+	m         = dt.getUTCMinutes(); 
+	s         = dt.getUTCSeconds();
+	dy        = dt.getUTCDate();
+	mth       = dt.getUTCMonth()+1;
+	yr        = dt.getUTCFullYear();
+	d         = dt.getUTCDay();
+
+
+	if(format=="hm"){ return h+ ":" +m; }
+
+	if(format=="m"){ return m; }
+
+	if(format=="h"){ return h; }
+
+    if(format=="d"){ return d; }
+
+    if(format=="dy"){ return d+ ":" +y; }		
+
+}
+
+
+
+function setTimeEnd(t) {
+	
+	//period str: 15m, 30m, 1h, 4h, 1d	
+
+	p = period
+
+	if(p=="15m" || p=="30m"){
+
+		p = parseInt(period.replace("m", ""));
+
+		for(i=1;i<100;i++){
+
+			x = p*i;
+
+			if(x>=60) {x=0;}
+                     
+			if(utc(t,"m") < x){
+
+				break; 
+			}
+
+		}
+
+		while(utc(t,"m") != x){	t++;}
+	}
+
+
+	if(p=="1h" || p=="4h"){
+
+		p = parseInt(period.replace("h", ""));
+
+		for(i=1;i<100;i++){
+
+			x = p*i;
+
+			if(x>=24) {x=0;}
+                     
+			if(utc(t,"h") < x){
+
+				break; 
+			}
+
+		}
+
+		while(utc(t,"h") != x){	t++;}
+
+	}
+
+	if(p=="1d"){
+
+		x = utc(t,"d");
+
+		while(utc(t,"d") == x){	t++;}
+
+	}
+
+	//console.log(t +" "+utc(t,"m")+" "+x)
+
+
+
+	
+
+	//console.log(timestamp+ " "+t+ " "+x)
+
+	return t; 
 
 }
 
@@ -611,7 +697,271 @@ function _colI(){
 
 	
 
-	prevcolI = 1}
+	prevcolI = 1
+}
+
+
+
+function setPeriodData(){
+
+	return new Promise(function(resolve, reject){
+
+		if(c <= (csv.length-1)){
+
+			while(1){
+
+				
+				timestamp = parseInt(csv[c][0].substr(0, 10));
+
+				//set period
+				if(tmsI==0){ 
+
+					timestampCol = timestamp;
+
+					timestampMax = setTimeEnd(timestamp);
+
+					tmsI++; 
+
+					console.log(timestamp + " "+ timestampMax+ " "+ utc(timestamp, "hm")+ " "+utc(timestampMax, "hm") )
+				
+				}
+
+
+				id = csv[c][1];
+				price = csv[c][2];
+				vol = Number(csv[c][3]);
+				type = csv[c][4];
+
+				pr = roundPrice(price, ap)
+
+			    //gap()
+				
+		    	
+
+				if(typeof(col[pr]) !== "undefined"){
+
+
+					cls =  "c"+(colI);
+
+
+					if(typeof cols[pr][cls] == 'undefined' ){
+
+						cols[pr][cls] = { 'topB':0, 'topS':0, 'volB':0, 'volS':0};
+
+					}
+
+
+					if(type == "buy"){
+
+						col[pr]['vb'] = roundVol(col[pr]['vb'] + vol)
+						col[pr]['pb'] = roundPrice(col[pr]['pb'] + price * vol, apx)
+
+						total[pr]['vb'] = roundVol(total[pr]['vb'] + vol)
+						total[pr]['pb'] = roundPrice(total[pr]['pb'] + price * vol, apx)
+
+
+
+						//statistic   		
+						cols[pr][cls]['topB'] += 1;
+						cols[pr][cls]['volB'] = roundVol(cols[pr][cls]['volB'] + vol);
+
+						
+
+		 				//create grid  0...10, ex  10600: 10600, 10601...10609
+
+						if(ap=='x10' && col[pr]['scale_b'].length < 10){
+
+				     		xPr = roundPrice(price, 'nopoint') 
+
+							if(!col[pr]['scale_b'].includes(xPr)){  col[pr]['scale_b'].push(xPr) }
+
+						}
+
+					}
+
+
+					if(type == "sell"){
+
+						col[pr]['vs'] = roundVol(col[pr]['vs'] + vol);
+						col[pr]['ps'] = roundPrice(col[pr]['ps'] + price * vol, apx)
+
+						total[pr]['vs'] = roundVol(total[pr]['vs'] + vol);
+						total[pr]['ps'] = roundPrice(total[pr]['ps'] + price * vol, apx)
+
+
+						//statistic 
+						cols[pr][cls]['topS'] += 1;
+						cols[pr][cls]['volS'] = roundVol(cols[pr][cls]['volS'] + vol);
+
+
+						
+						if(ap=='x10' && col[pr]['scale_s'].length < 10){
+
+				     		xPr = roundPrice(price, 'nopoint') 
+
+							if(!col[pr]['scale_s'].includes(xPr)){  col[pr]['scale_s'].push(xPr) }
+
+						}
+
+					}
+
+				}
+
+
+
+				//stop (end of csv)
+				if(c == (csv.length-1) ) {
+
+					resolve();
+
+					tmsI=0;
+
+					console.log("stop")
+
+					break;
+
+
+				}else{
+
+					//next col
+					if(timestamp>=timestampMax) {
+
+						resolve();
+
+						console.log("next")
+
+						tmsI=0;
+
+						break;
+					}
+
+				}
+
+
+				c++;
+
+			} 
+
+		}
+
+	})
+}
+
+function setCol(){
+
+	//create add  col
+	
+	return new Promise(function(resolve, reject){    	    
+
+	    hh = '<div>'
+		   + '<div class="titleCol">'+utc(timestampCol, "hm")+'</div>';
+
+		for (p in prsScl) {
+
+			cp = prsScl[p].replace("_", ".")
+			cl = prsScl[p];
+		
+
+	  		v_b = col[cp]['vb'];
+	  		v_s = col[cp]['vs'];
+
+	  		if(v_b==0){ v_b = '';}
+	  		if(v_s==0){ v_s = '';}
+
+
+	  		scale_b = col[cp]['scale_b']
+	  		scale_s = col[cp]['scale_s']
+
+	  		//#6b7a1275
+	  		//#914b3e7a
+
+	  		if(scale_b.length == 10){ v_b_class = ' class="tv_b v_b full_b" '; }else{v_b_class=' class="tv_b v_b" ';}
+	  		if(scale_s.length == 10){ v_s_class = ' class="tv_s v_s full_s" '; }else{v_s_class=' class="tv_s v_s" ';}
+
+
+		  	v_b = v_b.toString()
+			if(v_b.indexOf(".") !==-1){
+
+				v_b = v_b.replace('.', '<span class="afp_b">.') + '</span>';
+
+			}
+
+
+
+		  	v_s = v_s.toString()
+			if(v_s.indexOf(".") !==-1){
+
+				v_s = v_s.replace('.', '<span class="afp_s">.') + '</span>';
+
+			}
+
+
+
+		  	hh += '<div><div'+v_b_class+' id="v_b_'+colI+'_'+cl+'">'+v_b+'</div><div'+v_s_class+'id="v_s_'+colI+'_'+cl+'">'+v_s+'</div></div>';
+
+		}
+
+
+
+		hh += '</div>';
+
+
+
+		$('#total').append(hh, resolve())
+
+
+		//reset col
+
+
+		if(c !== (csv.length-1)){
+		   	for (cl in col){
+		   		col[cl] = { 'vb':0, 'vs':0, 'pb':0, 'ps':0, 'scale_b':[], 'scale_s':[] };
+		   	}
+		}
+
+		colI++
+
+		
+
+	});
+}
+
+
+function sc(){ 
+
+	setCol().then(function(){ 
+
+		if(c!==(csv.length-1)){
+
+			console.log('sc ' +c + " "+(csv.length-1));
+
+			spd();
+
+			
+
+		}else{
+
+			console.log("live")
+
+		}
+
+
+		
+	}) 
+
+}
+
+
+function spd(){ 
+
+	setPeriodData().then(function(){ 
+
+		setTimeout(function(){ sc(); console.log('spd') }, 500) 
+
+
+	})
+}
+
 
 function displayCsv(){
 
@@ -623,355 +973,254 @@ function displayCsv(){
 
 
 
-    	for(c=0; c<csv.length; c++){
+    	spd();
+		
 
-    		
-    		timestamp = Number(csv[c][0]);
-
-    		//set period
-    		if(tmsI==0){ 
-
-    			timestampCol = timestamp;
-
-    			timestampMax = timestamp + prd;
-
-    			tmsI++; 
-
-
-
-    		
-    		}
-
-
-  
-    		id = csv[c][1];
-    		price = csv[c][2];
-    		vol = Number(csv[c][3]);
-    		type = csv[c][4];
-	
-			pr = roundPrice(price, ap)
-
-		    gap()
-			
-        	
-
-    		if(typeof(col[pr]) !== "undefined"){
-
-				cls =  "c"+(colI); 
-				if(typeof cols[pr][cls] == 'undefined' ){
-
-					cols[pr][cls] = { 'topB':0, 'topS':0, 'volB':0, 'volS':0};
-
-				}
-
-
-
-
-
-    			if(type == "buy"){
-
-    				col[pr]['vb'] = roundVol(col[pr]['vb'] + vol)
-    				col[pr]['pb'] = roundPrice(col[pr]['pb'] + price * vol, apx)
-
-    				total[pr]['vb'] = roundVol(total[pr]['vb'] + vol)
-    				total[pr]['pb'] = roundPrice(total[pr]['pb'] + price * vol, apx)
-
-
-
-    				//statistic   		
-					cols[pr][cls]['topB'] += 1;
-					cols[pr][cls]['volB'] = roundVol(cols[pr][cls]['volB'] + vol);
-
-    				
-	
-     				//create grid  0...10, ex  10600: 10600, 10601...10609
-
-    				if(ap=='x10' && col[pr]['scale_b'].length < 10){
-
-    		     		xPr = roundPrice(price, 'nopoint') 
-
-    					if(!col[pr]['scale_b'].includes(xPr)){  col[pr]['scale_b'].push(xPr) }
-
-    				}
-
-    			}
-
-
-    			if(type == "sell"){
-
-    				col[pr]['vs'] = roundVol(col[pr]['vs'] + vol);
-    				col[pr]['ps'] = roundPrice(col[pr]['ps'] + price * vol, apx)
-
-    				total[pr]['vs'] = roundVol(total[pr]['vs'] + vol);
-    				total[pr]['ps'] = roundPrice(total[pr]['ps'] + price * vol, apx)
-
-
-    				//statistic 
-					cols[pr][cls]['topS'] += 1;
-					cols[pr][cls]['volS'] = roundVol(cols[pr][cls]['volS'] + vol);
-
-
-    				
-    				if(ap=='x10' && col[pr]['scale_s'].length < 10){
-
-    		     		xPr = roundPrice(price, 'nopoint') 
-
-    					if(!col[pr]['scale_s'].includes(xPr)){  col[pr]['scale_s'].push(xPr) }
-
-    				}
-
-    			}
-
-
-
-    			
-    		}
-
-
+    	
 
     		//add col 
-    		if(timestamp >= timestampMax || c == (csv.length-1)){
+    // 		if(timestamp >= timestampMax || c == (csv.length-1)){
 
     			
 				
     			
-    			if(c !== (csv.length-1)){ tmsI=0 };
+    // 			if(c !== (csv.length-1)){ tmsI=0 };
 
 
-				dt = new Date(timestampCol * 1000);
-				h = dt.getUTCHours(); //+ dt.getTimezoneOffset()/60; 
-				m = dt.getUTCMinutes(); 
-				s = dt.getUTCSeconds();
-				dy = dt.getUTCDate();
-				mth = dt.getUTCMonth()+1;
-				hms = dy+'-'+mth;
+				// dt = new Date(timestampCol * 1000);
+				// h = dt.getUTCHours(); //+ dt.getTimezoneOffset()/60; 
+				// m = dt.getUTCMinutes(); 
+				// s = dt.getUTCSeconds();
+				// dy = dt.getUTCDate();
+				// mth = dt.getUTCMonth()+1;
+				// hms = dy+'-'+mth;
            
 
 		
-		   	    //create add  col
+		  //  	    //create add  col
 	     	       	    
 
-		   	    hh = '<div>'
-		   		   + '<div class="titleCol">'+dy+'</div>';
+		  //  	    hh = '<div>'
+		  //  		   + '<div class="titleCol">'+dy+'</div>';
 
 
 
 			
-				for (p in prsScl) {
+				// for (p in prsScl) {
 
 
-					cp = prsScl[p].replace("_", ".")
+				// 	cp = prsScl[p].replace("_", ".")
 
-					cl = prsScl[p];
+				// 	cl = prsScl[p];
 
 					
 
-		    		v_b = col[cp]['vb'];
-		    		v_s = col[cp]['vs'];
+		  //   		v_b = col[cp]['vb'];
+		  //   		v_s = col[cp]['vs'];
 
-		    		if(v_b==0){ v_b = '';}
-		    		if(v_s==0){ v_s = '';}
-
-
-		    		scale_b = col[cp]['scale_b']
-		    		scale_s = col[cp]['scale_s']
-
-		    		//#6b7a1275
-		    		//#914b3e7a
-
-		    		if(scale_b.length == 10){ v_b_class = ' class="tv_b v_b full_b" '; }else{v_b_class=' class="tv_b v_b" ';}
-		    		if(scale_s.length == 10){ v_s_class = ' class="tv_s v_s full_s" '; }else{v_s_class=' class="tv_s v_s" ';}
+		  //   		if(v_b==0){ v_b = '';}
+		  //   		if(v_s==0){ v_s = '';}
 
 
-		    		v_b = v_b.toString()
-					if(v_b.indexOf(".") !==-1){
+		  //   		scale_b = col[cp]['scale_b']
+		  //   		scale_s = col[cp]['scale_s']
 
-						v_b = v_b.replace('.', '<span class="afp_b">.') + '</span>';
+		  //   		//#6b7a1275
+		  //   		//#914b3e7a
+
+		  //   		if(scale_b.length == 10){ v_b_class = ' class="tv_b v_b full_b" '; }else{v_b_class=' class="tv_b v_b" ';}
+		  //   		if(scale_s.length == 10){ v_s_class = ' class="tv_s v_s full_s" '; }else{v_s_class=' class="tv_s v_s" ';}
+
+
+		  //   		v_b = v_b.toString()
+				// 	if(v_b.indexOf(".") !==-1){
+
+				// 		v_b = v_b.replace('.', '<span class="afp_b">.') + '</span>';
 				
 
-					}
+				// 	}
 
 
 
-		    		v_s = v_s.toString()
-					if(v_s.indexOf(".") !==-1){
+		  //   		v_s = v_s.toString()
+				// 	if(v_s.indexOf(".") !==-1){
 
-						v_s = v_s.replace('.', '<span class="afp_s">.') + '</span>';
+				// 		v_s = v_s.replace('.', '<span class="afp_s">.') + '</span>';
 				
 
-					}
+				// 	}
 
 
 
-		    		  hh += '<div><div'+v_b_class+' id="v_b_'+colI+'_'+cl+'">'+v_b+'</div><div'+v_s_class+'id="v_s_'+colI+'_'+cl+'">'+v_s+'</div></div>';
+		  //   		  hh += '<div><div'+v_b_class+' id="v_b_'+colI+'_'+cl+'">'+v_b+'</div><div'+v_s_class+'id="v_s_'+colI+'_'+cl+'">'+v_s+'</div></div>';
 
-		    	}
+		  //   	}
 
 
 	    	
-		    	hh += '</div>';
+		  //   	hh += '</div>';
 
 
 
-		    	$('#total').append(hh)
+		  //   	$('#total').append(hh)
 
 
-		    	//reset col
+		  //   	//reset col
 
 
-				if(c !== (csv.length-1)){
-			    	for (cl in col){
+				// if(c !== (csv.length-1)){
+			 //    	for (cl in col){
 
-			    		col[cl] = { 'vb':0, 'vs':0, 'pb':0, 'ps':0, 'scale_b':[], 'scale_s':[] };
-			    	}
-			    }
+			 //    		col[cl] = { 'vb':0, 'vs':0, 'pb':0, 'ps':0, 'scale_b':[], 'scale_s':[] };
+			 //    	}
+			 //    }
 
 		
 			   
-				colI++
-
-
-    		}
+				// colI++
+    // 		}
 
 			
 
     		//add total col 
-    		if(c==(csv.length-1)){
+    // 		if(c==(csv.length-1)){
 
 
 
 
 				
-				h = '<div>'
-				+   '<div class="titleCol">PRICE</div>'
-				for (p in prsScl) {
-					h += '<div class="price">'+prsScl[p].replace("_", ".") +'</div>'
-				}
+				// h = '<div>'
+				// +   '<div class="titleCol">PRICE</div>'
+				// for (p in prsScl) {
+				// 	h += '<div class="price">'+prsScl[p].replace("_", ".") +'</div>'
+				// }
 
-				h+= '</div>'
+				// h+= '</div>'
 				
 
 
 
-				//sum
+				// //sum
 
 				
-				h+= '<div>'
-				h+= '<div class="titleCol">SUM</div>'
+				// h+= '<div>'
+				// h+= '<div class="titleCol">SUM</div>'
 
-				for (p in prsScl) {
-
-
-					t = prsScl[p].replace("_", ".")
-
-					ts = prsScl[p];
-
-					s_b = total[t]['pb'];s_s = total[t]['ps'];
-					if(s_b==0){ s_b = "";} if(s_s==0){ s_s = "";}	
+				// for (p in prsScl) {
 
 
+				// 	t = prsScl[p].replace("_", ".")
 
-					h+='<div><div class="ts_b" id="ts_b'+ts+'">'+s_b+'</div><div class="ts_s" id="ts_s'+ts+'">'+s_s+'</div></div>'; 
-				}
+				// 	ts = prsScl[p];
 
-
-				h+= '</div>'
+				// 	s_b = total[t]['pb'];s_s = total[t]['ps'];
+				// 	if(s_b==0){ s_b = "";} if(s_s==0){ s_s = "";}	
 
 
 
-
-				//vol
-				tmpTotalVol = []
-				h+= '<div>'
-				h+= '<div class="titleCol">VOL</div>'
-
-				for (p in prsScl) {
+				// 	h+='<div><div class="ts_b" id="ts_b'+ts+'">'+s_b+'</div><div class="ts_s" id="ts_s'+ts+'">'+s_s+'</div></div>'; 
+				// }
 
 
-					t = prsScl[p].replace("_", ".")
-
-					tv = prsScl[p];
-
-
-					v_b = total[t]['vb']; v_s = total[t]['vs'];
-
-					if(v_b==0){ v_b = "";} if(v_s==0){ v_s = "";}
+				// h+= '</div>'
 
 
 
-		    		v_b = v_b.toString()
 
-					if(v_b.indexOf(".") !==-1){
+				// //vol
+				// tmpTotalVol = []
+				// h+= '<div>'
+				// h+= '<div class="titleCol">VOL</div>'
 
-						v_b = v_b.replace('.', '<span class="afp_b">.') + '</span>';
+				// for (p in prsScl) {
+
+
+				// 	t = prsScl[p].replace("_", ".")
+
+				// 	tv = prsScl[p];
+
+
+				// 	v_b = total[t]['vb']; v_s = total[t]['vs'];
+
+				// 	if(v_b==0){ v_b = "";} if(v_s==0){ v_s = "";}
+
+
+
+		  //   		v_b = v_b.toString()
+
+				// 	if(v_b.indexOf(".") !==-1){
+
+				// 		v_b = v_b.replace('.', '<span class="afp_b">.') + '</span>';
 				
 
-					}
+				// 	}
 
 
 
-		    		v_s = v_s.toString()
-					if(v_s.indexOf(".") !==-1){
+		  //   		v_s = v_s.toString()
+				// 	if(v_s.indexOf(".") !==-1){
 
-						v_s = v_s.replace('.', '<span class="afp_s">.') + '</span>';
+				// 		v_s = v_s.replace('.', '<span class="afp_s">.') + '</span>';
 				
 
-					}
+				// 	}
 
 
 
 
 
-					h += '<div><div class="tv_b" id="tv_b'+tv+'">'+v_b+'</div><div class="tv_s" id="tv_s'+tv+'">'+v_s+'</div></div>';
+				// 	h += '<div><div class="tv_b" id="tv_b'+tv+'">'+v_b+'</div><div class="tv_s" id="tv_s'+tv+'">'+v_s+'</div></div>';
 
-				}
+				// }
 
-				h+= '</div>'
-
-
-
-				//vol bars
-				tmpTotalVol = []
-				h+= '<div>'
-				h+= '<div class="titleCol">VOL BARS</div>'
-
-				for (p in prsScl) {
-
-
-					t = prsScl[p].replace("_", ".")
-
-					tv = prsScl[p];
-
-
-					v_b = total[t]['vb']; v_s = total[t]['vs'];
-
-
-					v_b = (v_b * 100) / mv ;
-
-					v_s = (v_s * 100) / mv ;
-
-				
-
-					h += '<div class="tvb_row"><div class="tvb_b" id="tvb_b'+tv+'" style="width:'+v_b+'%"></div><div class="tvb_s" id="tvb_s'+tv+'" style="width:'+v_s+'%"></div></div>';
-
-				}
-
-				h+= '</div>'
+				// h+= '</div>'
 
 
 
+				// //vol bars
+				// tmpTotalVol = []
+				// h+= '<div>'
+				// h+= '<div class="titleCol">VOL BARS</div>'
+
+				// for (p in prsScl) {
 
 
+				// 	t = prsScl[p].replace("_", ".")
 
-				$('#total').prepend(h)
+				// 	tv = prsScl[p];
 
+
+				// 	v_b = total[t]['vb']; v_s = total[t]['vs'];
+
+
+				// 	v_b = (v_b * 100) / mv ;
+
+				// 	v_s = (v_s * 100) / mv ;
 
 				
 
+				// 	h += '<div class="tvb_row"><div class="tvb_b" id="tvb_b'+tv+'" style="width:'+v_b+'%"></div><div class="tvb_s" id="tvb_s'+tv+'" style="width:'+v_s+'%"></div></div>';
 
-    		}
+				// }
 
-    	}  
+				// h+= '</div>'
+
+
+
+
+
+
+				// $('#total').prepend(h)
+    // 		}
+ 
+
+
+
+
+
+
+
+
 
 
     	//down colI
@@ -980,27 +1229,20 @@ function displayCsv(){
     		colI--
 
     	}
+		
 
-
-		bfxTrade()
-
-		//testWSS()
-
-		gapHTML()
+		//gapHTML()
 		
 
 
 	}else{
 
-		//testWSS()
+		
 
 		bfxTrade()
 	}
-
-
-
-
 }
+
 
 function eachLive(){
 
@@ -1229,9 +1471,7 @@ function eachLive(){
 		//prPrev = pr
 
 	}
-
 }
-
 
 
 function displayCsvLive(){
@@ -1288,9 +1528,6 @@ function displayCsvLive(){
 	}
 }
 
-
-
-
 function displayWss(){
 
 
@@ -1308,15 +1545,13 @@ function displayWss(){
 
 
 	eachLive()
-
-
 }
 
 
 
 function testWSS(){
 
-    	csvFile = '28-08-2021---29-08-2021---BTCUSD.csv';
+    csvFile = '28-08-2021---29-08-2021---BTCUSD.csv';
 	readFile(csvFile)
 
 		c= 0
@@ -1362,8 +1597,6 @@ function testWSS(){
 
 
 	}, 500)
-
-
 }
 
 

@@ -1,9 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script src="test.js"></script>
+</head>
+<body>
 
-	
-
-var cc = 123;
-
-console.log(cc);
+</body>
+</html>
 
 
 
