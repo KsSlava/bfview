@@ -171,6 +171,30 @@
 
 	<div id="v4Container">
 		<table>
+		<tr>
+			<td style="padding-right: 20px;">date</td>
+			<td>str</td>
+			<td style="padding-right: 35px;">end</td>
+
+			<td style="padding-right: 20px;">v B</td>
+			<td style="padding-right: 35px;">v S</td>
+
+			<td style="padding-right: 20px;">v f B</td>
+			<td style="padding-right: 35px;">v f S</td>
+	
+			<td style="padding-right: 20px;">o B</td>
+			<td style="padding-right: 35px;">o B</td>
+
+			<td style="padding-right: 20px;">o f B</td>
+			<td style="padding-right: 35px;">o f S</td>
+
+			<td style="padding-right: 20px;">pr str</td>
+			<td style="padding-right: 35px;">pr end</td>	
+
+			<td>%</td>
+
+
+		</tr>
 			
 		</table>
 	</div>

@@ -127,7 +127,7 @@ function roundVol(v){
 
 function priceScale(i){
 
-	x = 20 //% min and max size of price scale 
+	x = 60 //% min and max size of price scale 
 
 	min  =   roundPrice(  i - (i / 100 * x ) , ap) 
 
@@ -318,7 +318,7 @@ function gap(){
 	if(g_tmsI==0){ 
 
 	
-		g_timestampMax = timestamp + prd;
+		g_timestampMax = setTimeEnd(timestamp);
 
 		g_tmsI++; 
 
@@ -563,6 +563,8 @@ function setTimeEnd(t) {
 function gapHTML(){
 
 	gW =  $(".price").css("width")
+
+
 	gW = (Number(gW.match(/[0-9]+/))+1) * 2
 
 	setInterval(function(){
@@ -695,8 +697,6 @@ function _colI(){
 
 	if(colI_lock==0){  colI_lock = 1; }else{ colI++ ;}
 
-	
-
 	prevcolI = 1
 }
 
@@ -722,7 +722,7 @@ function setPeriodData(){
 
 					tmsI++; 
 
-					console.log(timestamp + " "+ timestampMax+ " "+ utc(timestamp, "hm")+ " "+utc(timestampMax, "hm") )
+//					console.log(timestamp + " "+ timestampMax+ " "+ utc(timestamp, "hm")+ " "+utc(timestampMax, "hm") )
 				
 				}
 
@@ -816,7 +816,7 @@ function setPeriodData(){
 
 					tmsI=0;
 
-					console.log("stop")
+				//	console.log("stop")
 
 					break;
 
@@ -828,7 +828,7 @@ function setPeriodData(){
 
 						resolve();
 
-						console.log("next")
+					//	console.log("next")
 
 						tmsI=0;
 
@@ -907,10 +907,15 @@ function setCol(){
 
 
 
+
+
+
 		$('#total').append(hh, resolve())
 
 
 		//reset col
+
+
 
 
 		if(c !== (csv.length-1)){
@@ -927,13 +932,134 @@ function setCol(){
 }
 
 
+function setTotCol(){
+
+	//add total col 
+	if(c==(csv.length-1)){
+		
+		h = '<div>'
+		+   '<div class="titleCol">PRICE</div>'
+		for (p in prsScl) {
+			h += '<div class="price">'+prsScl[p].replace("_", ".") +'</div>'
+		}
+
+		h+= '</div>'
+		
+
+		//sum
+		h+= '<div>'
+		h+= '<div class="titleCol">SUM</div>'
+
+		for (p in prsScl) {
+
+
+			t = prsScl[p].replace("_", ".")
+
+			ts = prsScl[p];
+
+			s_b = total[t]['pb'];s_s = total[t]['ps'];
+			if(s_b==0){ s_b = "";} if(s_s==0){ s_s = "";}	
+
+
+
+			h+='<div><div class="ts_b" id="ts_b'+ts+'">'+s_b+'</div><div class="ts_s" id="ts_s'+ts+'">'+s_s+'</div></div>'; 
+		}
+
+
+		h+= '</div>'
+
+
+		//vol
+		tmpTotalVol = []
+		h+= '<div>'
+		h+= '<div class="titleCol">VOL</div>'
+
+		for (p in prsScl) {
+
+
+			t = prsScl[p].replace("_", ".")
+
+			tv = prsScl[p];
+
+
+			v_b = total[t]['vb']; v_s = total[t]['vs'];
+
+			if(v_b==0){ v_b = "";} if(v_s==0){ v_s = "";}
+
+
+
+			v_b = v_b.toString()
+
+			if(v_b.indexOf(".") !==-1){
+
+				v_b = v_b.replace('.', '<span class="afp_b">.') + '</span>';
+		
+
+			}
+
+
+
+			v_s = v_s.toString()
+			if(v_s.indexOf(".") !==-1){
+
+				v_s = v_s.replace('.', '<span class="afp_s">.') + '</span>';
+		
+
+			}
+
+
+
+
+
+			h += '<div><div class="tv_b" id="tv_b'+tv+'">'+v_b+'</div><div class="tv_s" id="tv_s'+tv+'">'+v_s+'</div></div>';
+
+		}
+
+		h+= '</div>'
+
+
+
+		//vol bars
+		tmpTotalVol = []
+		h+= '<div>'
+		h+= '<div class="titleCol">VOL BARS</div>'
+
+		for (p in prsScl) {
+
+
+			t = prsScl[p].replace("_", ".")
+
+			tv = prsScl[p];
+
+
+			v_b = total[t]['vb']; v_s = total[t]['vs'];
+
+
+			v_b = (v_b * 100) / mv ;
+
+			v_s = (v_s * 100) / mv ;
+
+		
+
+			h += '<div class="tvb_row"><div class="tvb_b" id="tvb_b'+tv+'" style="width:'+v_b+'%"></div><div class="tvb_s" id="tvb_s'+tv+'" style="width:'+v_s+'%"></div></div>';
+
+		}
+
+		h+= '</div>'
+
+		$('#total').prepend(h)
+	}
+
+}
+
+
 function sc(){ 
 
 	setCol().then(function(){ 
 
 		if(c!==(csv.length-1)){
 
-			console.log('sc ' +c + " "+(csv.length-1));
+		//	console.log('sc ' +c + " "+(csv.length-1));
 
 			spd();
 
@@ -941,8 +1067,20 @@ function sc(){
 
 		}else{
 
-			console.log("live")
 
+
+			setTotCol()
+
+	    	if(c==csv.length){
+
+	    		colI--
+
+	    	}
+						
+		    //gapHTML()
+
+
+		    setTimeout(function(){ bfxTrade() }, 10000);
 		}
 
 
@@ -956,7 +1094,8 @@ function spd(){
 
 	setPeriodData().then(function(){ 
 
-		setTimeout(function(){ sc(); console.log('spd') }, 500) 
+		setTimeout(function(){ sc(); //console.log('spd')
+		 }, 500) 
 
 
 	})
@@ -971,273 +1110,10 @@ function displayCsv(){
 
     	priceScale(csv[0][2])
 
-
-
     	spd();
 		
 
-    	
-
-    		//add col 
-    // 		if(timestamp >= timestampMax || c == (csv.length-1)){
-
-    			
-				
-    			
-    // 			if(c !== (csv.length-1)){ tmsI=0 };
-
-
-				// dt = new Date(timestampCol * 1000);
-				// h = dt.getUTCHours(); //+ dt.getTimezoneOffset()/60; 
-				// m = dt.getUTCMinutes(); 
-				// s = dt.getUTCSeconds();
-				// dy = dt.getUTCDate();
-				// mth = dt.getUTCMonth()+1;
-				// hms = dy+'-'+mth;
-           
-
-		
-		  //  	    //create add  col
-	     	       	    
-
-		  //  	    hh = '<div>'
-		  //  		   + '<div class="titleCol">'+dy+'</div>';
-
-
-
-			
-				// for (p in prsScl) {
-
-
-				// 	cp = prsScl[p].replace("_", ".")
-
-				// 	cl = prsScl[p];
-
-					
-
-		  //   		v_b = col[cp]['vb'];
-		  //   		v_s = col[cp]['vs'];
-
-		  //   		if(v_b==0){ v_b = '';}
-		  //   		if(v_s==0){ v_s = '';}
-
-
-		  //   		scale_b = col[cp]['scale_b']
-		  //   		scale_s = col[cp]['scale_s']
-
-		  //   		//#6b7a1275
-		  //   		//#914b3e7a
-
-		  //   		if(scale_b.length == 10){ v_b_class = ' class="tv_b v_b full_b" '; }else{v_b_class=' class="tv_b v_b" ';}
-		  //   		if(scale_s.length == 10){ v_s_class = ' class="tv_s v_s full_s" '; }else{v_s_class=' class="tv_s v_s" ';}
-
-
-		  //   		v_b = v_b.toString()
-				// 	if(v_b.indexOf(".") !==-1){
-
-				// 		v_b = v_b.replace('.', '<span class="afp_b">.') + '</span>';
-				
-
-				// 	}
-
-
-
-		  //   		v_s = v_s.toString()
-				// 	if(v_s.indexOf(".") !==-1){
-
-				// 		v_s = v_s.replace('.', '<span class="afp_s">.') + '</span>';
-				
-
-				// 	}
-
-
-
-		  //   		  hh += '<div><div'+v_b_class+' id="v_b_'+colI+'_'+cl+'">'+v_b+'</div><div'+v_s_class+'id="v_s_'+colI+'_'+cl+'">'+v_s+'</div></div>';
-
-		  //   	}
-
-
-	    	
-		  //   	hh += '</div>';
-
-
-
-		  //   	$('#total').append(hh)
-
-
-		  //   	//reset col
-
-
-				// if(c !== (csv.length-1)){
-			 //    	for (cl in col){
-
-			 //    		col[cl] = { 'vb':0, 'vs':0, 'pb':0, 'ps':0, 'scale_b':[], 'scale_s':[] };
-			 //    	}
-			 //    }
-
-		
-			   
-				// colI++
-    // 		}
-
-			
-
-    		//add total col 
-    // 		if(c==(csv.length-1)){
-
-
-
-
-				
-				// h = '<div>'
-				// +   '<div class="titleCol">PRICE</div>'
-				// for (p in prsScl) {
-				// 	h += '<div class="price">'+prsScl[p].replace("_", ".") +'</div>'
-				// }
-
-				// h+= '</div>'
-				
-
-
-
-				// //sum
-
-				
-				// h+= '<div>'
-				// h+= '<div class="titleCol">SUM</div>'
-
-				// for (p in prsScl) {
-
-
-				// 	t = prsScl[p].replace("_", ".")
-
-				// 	ts = prsScl[p];
-
-				// 	s_b = total[t]['pb'];s_s = total[t]['ps'];
-				// 	if(s_b==0){ s_b = "";} if(s_s==0){ s_s = "";}	
-
-
-
-				// 	h+='<div><div class="ts_b" id="ts_b'+ts+'">'+s_b+'</div><div class="ts_s" id="ts_s'+ts+'">'+s_s+'</div></div>'; 
-				// }
-
-
-				// h+= '</div>'
-
-
-
-
-				// //vol
-				// tmpTotalVol = []
-				// h+= '<div>'
-				// h+= '<div class="titleCol">VOL</div>'
-
-				// for (p in prsScl) {
-
-
-				// 	t = prsScl[p].replace("_", ".")
-
-				// 	tv = prsScl[p];
-
-
-				// 	v_b = total[t]['vb']; v_s = total[t]['vs'];
-
-				// 	if(v_b==0){ v_b = "";} if(v_s==0){ v_s = "";}
-
-
-
-		  //   		v_b = v_b.toString()
-
-				// 	if(v_b.indexOf(".") !==-1){
-
-				// 		v_b = v_b.replace('.', '<span class="afp_b">.') + '</span>';
-				
-
-				// 	}
-
-
-
-		  //   		v_s = v_s.toString()
-				// 	if(v_s.indexOf(".") !==-1){
-
-				// 		v_s = v_s.replace('.', '<span class="afp_s">.') + '</span>';
-				
-
-				// 	}
-
-
-
-
-
-				// 	h += '<div><div class="tv_b" id="tv_b'+tv+'">'+v_b+'</div><div class="tv_s" id="tv_s'+tv+'">'+v_s+'</div></div>';
-
-				// }
-
-				// h+= '</div>'
-
-
-
-				// //vol bars
-				// tmpTotalVol = []
-				// h+= '<div>'
-				// h+= '<div class="titleCol">VOL BARS</div>'
-
-				// for (p in prsScl) {
-
-
-				// 	t = prsScl[p].replace("_", ".")
-
-				// 	tv = prsScl[p];
-
-
-				// 	v_b = total[t]['vb']; v_s = total[t]['vs'];
-
-
-				// 	v_b = (v_b * 100) / mv ;
-
-				// 	v_s = (v_s * 100) / mv ;
-
-				
-
-				// 	h += '<div class="tvb_row"><div class="tvb_b" id="tvb_b'+tv+'" style="width:'+v_b+'%"></div><div class="tvb_s" id="tvb_s'+tv+'" style="width:'+v_s+'%"></div></div>';
-
-				// }
-
-				// h+= '</div>'
-
-
-
-
-
-
-				// $('#total').prepend(h)
-    // 		}
- 
-
-
-
-
-
-
-
-
-
-
-    	//down colI
-    	if(c==csv.length){
-
-    		colI--
-
-    	}
-		
-
-		//gapHTML()
-		
-
-
-	}else{
-
-		
+	}else{		
 
 		bfxTrade()
 	}
@@ -1246,61 +1122,38 @@ function displayCsv(){
 
 function eachLive(){
 
-
-
-
-
-
 	//set period
 	//add col 
 	if(timestamp>=timestampMax){ tmsI = 0 }
 
 	if(tmsI==0){ 
 		
-		timestampMax = timestamp + prd;
+		timestampCol = timestamp;
+
+		timestampMax = setTimeEnd(timestamp);
 
 		tmsI++; 
 
-		
-
-		dt = new Date(timestamp * 1000);
-		h = dt.getUTCHours(); //+ dt.getTimezoneOffset()/60; 
-		m = dt.getUTCMinutes(); 
-		s = dt.getUTCSeconds();
-		dy = dt.getUTCDate();
-		mth = dt.getUTCMonth()+1;
-		hms = dy+'-'+mth;
+	//	console.log(timestamp + " "+ timestampMax+ " "+ utc(timestamp, "hm")+ " "+utc(timestampMax, "hm") )
 
 
 		//reset col
-
     	for (k in col){
 
     		col[k] = { 'vb':0, 'vs':0, 'pb':0, 'ps':0, 'scale_b':[], 'scale_s':[] };
     	}
 
-
-
 		$('#total').append(addCol(dy));
 
-	    	
-
-
 	}
-
 
 	
 	pr = roundPrice(price, ap)
 
-	gap()
-
-
-
+	//gap()
 
 
 	if(typeof(col[pr]) !== "undefined"){
-
-
 
 		if(type == "buy"){
 
@@ -1319,11 +1172,6 @@ function eachLive(){
 				if(!col[pr]['scale_b'].includes(xPr)){  col[pr]['scale_b'].push(xPr) }
 
 			}
-
-
-
-
-
 
 
 	    	//display buy 

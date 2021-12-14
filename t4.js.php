@@ -60,7 +60,7 @@ function utc(utmsp, format){
 
     if(format=="d"){
 
-		return d;
+		return dy;
 
 	}
 
@@ -68,7 +68,7 @@ function utc(utmsp, format){
 
 	if(format=="dmy"){
 
-		return d+"-"+mth+"-"+yr;
+		return dy+"-"+mth+"-"+yr;
 
 	}		
 
@@ -145,6 +145,29 @@ function setTimeEnd(t) {
 }
 
 
+function pricePerc(){
+
+	r = 0;
+
+	if(prc  >  prcStart){
+
+		r =  (prc * 100) / prcStart - 100;
+
+	}else{
+
+		r = (prcStart * 100) / prc - 100;
+
+		r = 0 - r;
+
+
+	}
+
+	return Math.round(r*100)/100;
+
+
+}
+
+
 
 function results(){
 
@@ -205,6 +228,14 @@ function results(){
 			h += 	'<td>'+utbf+'</td>';
 
 			h += 	'<td>'+utsf+'</td>';
+
+			h += 	'<td>'+ (Math.floor(prcStart/1)*1) +'</td>';
+
+			h += 	'<td>'+(Math.floor(prc/1)*1)+'</td>';
+
+			h += 	'<td>'+pricePerc()+'</td>';
+
+
 
 		h += '</tr>';
 

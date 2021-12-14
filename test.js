@@ -1,58 +1,21 @@
 
-function x1(){
 
-	return new Promise(function(resolve, reject){
+utmsp = 1638316802
 
-	  	setTimeout(function(){ r = 'good'; resolve(r);}, 2000)
-  
-	})
+dt = new Date;
+dt.setTime(utmsp*1000);
 
-}
-
-
-
-function x2(){
-
-	return new Promise(function(resolve, reject){
-
-	  	setTimeout(function(){ r = 'very good'; resolve(r);}, 2000)
-  
-	})
-}
+	h         = dt.getUTCHours(); 
+	m         = dt.getUTCMinutes(); 
+	s         = dt.getUTCSeconds();
+	dy        = dt.getUTCDate();
+	mth       = dt.getUTCMonth()+1;
+	yr        = dt.getUTCFullYear();
+	d         = dt.getUTCDay();
 
 
 
-
-
-
-
-
-function y1(){
-
-	x1().then(function(){  y2();  console.log("goo");	})
-}
-
-
-
-function y2(){ 
-
-	x2().then(function(e){ y1();  console.log("very"); })
-
-}
-
-
-c=0
-while(true){
-
-	c++;
-
-	console.log(c)
-
-	if (c==5) {break}
-}
-
-
-
+	console.log(dy)
 
 
 
